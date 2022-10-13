@@ -1,0 +1,44 @@
+﻿@page
+@model TelegramUsersModel
+@{
+    ViewData["Title"] = "Пользователи";
+}
+
+<table id="table_id" class="display">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Телеграм Id</th>
+            <th>Имя</th>
+            <th>Телеграм Ник</th>
+            <th>Позиция</th>
+            <th>Ответы</th>
+            <th>Задач поставлено</th>
+            <th>Задач выполняет</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var user in @Model.Users)
+        {
+        <tr>
+            <td>@user.Id</td>
+            <td>@user.TelegramId</td>
+            <td>@user.Name</td>
+            <td>@user.TelegramName</td>
+            <td>@user.Position</td>
+            <td>@user.Answers.Count()</td>
+            <td>@user.Problems.Count()</td>
+            <td>@user.GetProblems.Count()</td>
+        </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.js"></script>
+    <script>
+        $(document).ready( function () {
+            $('#table_id').DataTable();
+        } );
+    </script>
+}

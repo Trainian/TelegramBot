@@ -1,0 +1,46 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Задачи";
+}
+
+<table id="table_id" class="display">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Сообщение</th>
+            <th>Изображение</th>
+            <th>Приоритет</th>
+            <th>Ответы</th>
+            <th>Дата создания</th>
+            <th>Выполнен?</th>
+            <th>Создал</th>
+            <th>Кто выполняет</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var problem in @Model.Problems)
+        {
+        <tr>
+            <td>@problem.Id</td>
+            <td>@problem.Text</td>
+            <td class="table__image"><img src="@problem.Img" alt="@problem.Img"></td>
+            <td>@problem.Priority</td>
+            <td>@problem.Answers.Count</td>
+            <td>@problem.CreateDateTime</td>
+            <td>@problem.IsComplited</td>
+            <td>@problem.UserCreateProblem!.Name</td>
+            <td>@(problem.UserGetProblem?.Name ?? "")</td>
+        </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.js"></script>
+    <script>
+        $(document).ready( function () {
+            $('#table_id').DataTable();
+        } );
+    </script>
+}
