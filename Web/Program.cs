@@ -13,6 +13,16 @@ using Web.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
+//{
+//    config.AddJsonFile("appsettings.json",
+//                       optional: true,
+//                       reloadOnChange: true)
+//          .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json",
+//                        optional: true,
+//                        reloadOnChange: true);
+//});
+
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 
 builder.Host.UseSerilog((ctx, lx) => {

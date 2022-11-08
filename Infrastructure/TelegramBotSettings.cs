@@ -9,19 +9,19 @@ namespace Infrastructure.Settings
     public class TelegramBotSettings : IBotProperties
     {
         private readonly BotCommandHelper _commandHelper;
-        private static bool _firstStart;
         public TelegramBotSettings(IConfiguration configuration)
         {
             var Token = configuration["Telegram:BotToken"];
             var Url = String.Concat(configuration["ApplicationUrl"], "/api/telegram");
             var WebHookToken = configuration["Telegram:WebhookToken"];
+            var firstStart = configuration["Telegram:FirstStart"];
 
             Api = new BotClient(Token);
             User = Api.GetMe();
 
             _commandHelper = new BotCommandHelper(this);
 
-            if(!_firstStart)
+            if(firstStart == "true")
             {
                 Api.DeleteMyCommands();
                 Api.SetMyCommands(
@@ -34,7 +34,7 @@ namespace Infrastructure.Settings
 
                 Api.DeleteWebhook();
                 Api.SetWebhook(Url, secretToken: WebHookToken);
-                _firstStart = true;
+                configuration["Telegram:FirstStart"] = "false";
             }
             //To Set WebHook
             //https://api.telegram.org/bot{token}/setWebhook?url=https://{site}/api/telegram&secret_token={secret token}

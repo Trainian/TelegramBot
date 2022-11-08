@@ -116,14 +116,10 @@ namespace Infrastructure.Services.Api
 
         public async Task<IEnumerable<Problem>> GetAllProblemsByTelegramIdAsync(long telegramId)
         {
-            HashSet<Problem> problemsDelivered = new HashSet<Problem>();
-            HashSet<Problem> problemsPerformed = new HashSet<Problem>();
             var pDelivered = await GetDeliveredProblemsByTelegramIdAsync(telegramId);
-            problemsDelivered = pDelivered.ToHashSet<Problem>();
             var pPerformed = await GetPerformedProblemsByTelegramIdAsync(telegramId);
-            problemsPerformed = pPerformed.ToHashSet<Problem>();
-            problemsDelivered.UnionWith(problemsPerformed);
-            return problemsDelivered.ToList();
+            var result = pDelivered.Union(pPerformed).ToList();
+            return result;
         }
 
         public async Task<Problem> GetDeliveredProblemByTelegramIdAsync(long telegramId, int problemId)

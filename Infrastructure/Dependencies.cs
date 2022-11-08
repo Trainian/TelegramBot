@@ -12,7 +12,8 @@ namespace Infrastructure
     {
         public static void ConfigureData(IConfiguration configuration, IServiceCollection services, IHostEnvironment environment)
         {
-            if (environment.IsDevelopment())
+            var db = bool.Parse(configuration["DatabaseInMemory"]);
+            if (db)
             {
                 services.AddDbContext<IdentityContext>(c => c.UseInMemoryDatabase("Identity"));
                 services.AddDbContext<TelegramContext>(c => c.UseInMemoryDatabase("Telegram"));

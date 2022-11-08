@@ -213,7 +213,7 @@ namespace Infrastructure.Services.Telegram
                 $"Приоритет: <b>{problem.Priority}</b> \\ Создан: <b>{problem.CreateDateTime.ToShortDateString()}</b>\n" +
                 $"Выполняется (дней): <b>{ts.Days}</b>\n" +
                 $"Поставил: <b>{problem.UserCreateProblem!.Name}</b> \\ Выполняет: <b>{problem.UserGetProblem?.Name ?? "-"}</b>\n\n";
-            foreach (var answer in problem.Answers)
+            foreach (var answer in problem.Answers.OrderBy(a => a.Id))
             {
                 message += $"🗨️ <i>{answer.UserCreate!.Name}</i>: \n{answer.Text}\n";
             }
@@ -233,17 +233,17 @@ namespace Infrastructure.Services.Telegram
             {
                 case ProblemModificationEnum.Выполнена:
                     problem.IsComplited = true;
-                    result = await _service.UpdateProblemAsync(problem);
                     await ClearInlineKeyboard(callbackQuery);
-                    await Api.SendMessageAsync(callbackQuery.Message!.Chat.Id, result);
                     await SendMessagesAboutUpdateProblem(callbackQuery.From.Id, problemId, ProblemModificationEnum.Выполнена);
+                    result = await _service.UpdateProblemAsync(problem);
+                    await Api.SendMessageAsync(callbackQuery.Message!.Chat.Id, result);
                     break;
 
                 case ProblemModificationEnum.Удалить:
-                    result = await _service.DeleteProblemByIdAsync(problem);
                     await ClearInlineKeyboard(callbackQuery);
-                    await Api.SendMessageAsync(callbackQuery.Message!.Chat.Id, result);
                     await SendMessagesAboutUpdateProblem(callbackQuery.From.Id, problemId, ProblemModificationEnum.Удалить);
+                    result = await _service.DeleteProblemByIdAsync(problem);
+                    await Api.SendMessageAsync(callbackQuery.Message!.Chat.Id, result);
                     break;
 
                 case ProblemModificationEnum.Изменить_приоритет:
@@ -262,7 +262,7 @@ namespace Infrastructure.Services.Telegram
                     };
                     markup.InlineKeyboard = keyboard;
                     result = await GetProblemInformation(telegramId, problemId);
-                    result += "<b>Выберите приоритет:</b>";
+                    result += "<b>Выберете приоритет:</b>";
                     await Api.EditMessageTextAsync<Message>(callbackQuery.Message.Chat.Id, callbackQuery.Message.MessageId,
                         result, parseMode: ParseMode.HTML, replyMarkup: markup);
                     break;
@@ -325,11 +325,11 @@ namespace Infrastructure.Services.Telegram
                     message = $"Задача c <b>Id:{problem.Id}</b> была <b>Удалена</b>";
                     break;
                 case ProblemModificationEnum.Новый_комментарий:
-                    var answer = problem.Answers.Last();
+                    var answer = problem.Answers.OrderBy(a => a.Id).Last();
                     message = $"В задаче c <b>Id:{problem.Id}</b> был добавлен новый комментарий:\n 🗨️<b>{answer.UserCreate!.Name}</b>\n{answer.Text}";
                     break;
                 case ProblemModificationEnum.Изменить_приоритет:
-                    message = $"В задаче c <b>Id:{problem.Id}</b> был изминен приоритет на: <b>{problem.Priority}</b>";
+                    message = $"В задаче c <b>Id:{problem.Id}</b> был изменен приоритет на: <b>{problem.Priority}</b>";
                     break;
                 case ProblemModificationEnum.Новая_задача:
                     message = $"Была поставлена новая задача <b>Id: {problem.Id}</b> Задача: <b>{problem.Text}</b>, от <b>{problem.UserCreateProblem!.Name}</b>";
