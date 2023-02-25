@@ -5,6 +5,7 @@ using Telegram.BotAPI.AvailableTypes;
 using Microsoft.Extensions.Logging;
 using Telegram.BotAPI.AvailableMethods.FormattingOptions;
 using ApplicationCore.Entities.Telegram;
+using ApplicationCore.Enums;
 
 namespace Infrastructure.Services.Telegram
 {
@@ -25,7 +26,7 @@ namespace Infrastructure.Services.Telegram
                 case "help":
                     answer = string.Format("📝<b>---Как добавить новую задачу---</b>📝\n\n" +
                         "1️⃣ Для добавления новой задачи, достаточно отправить сообщение или изображение с подписью к нему.\n\n" +
-                        "2️⃣ После чего, бот у вас уточнит создавать задачу, ответив на это сообщение вы добавите новую задачу.");
+                        "2️⃣ После чего, бот у вас уточнит что сделатṁ, ответив на это сообщение вы добавите новую задачу.");
                     await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
                     break;
 
@@ -41,7 +42,7 @@ namespace Infrastructure.Services.Telegram
                         break;
                     }
                     answer = string.Format("📝<b>---Выберете задачу, для прочтения---</b>📝");
-                    var markup = await GetInlineKeyboardMyProblems(message.From.Id, "ShowTasks");
+                    var markup = await GetInlineKeyboardWithProblemsAsync(message.From.Id, "ShowTasks");
                     await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, replyMarkup: markup, cancellationToken: cancellationToken);
                     break;
 
@@ -51,7 +52,7 @@ namespace Infrastructure.Services.Telegram
                         await AnswerIsUserNotRegistered(message, cancellationToken);
                         break;
                     }
-                    answer = await GetProblemsMessage(message.From!.Id, WhatTheProblem.Получено);
+                    answer = await GetProblemsMessageAsync(message.From!.Id, WhatTheProblem.Получено);
                     await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
                     break;
 
@@ -61,7 +62,7 @@ namespace Infrastructure.Services.Telegram
                         await AnswerIsUserNotRegistered(message, cancellationToken);
                         break;
                     }
-                    answer = await GetProblemsMessage(message.From!.Id, WhatTheProblem.Поставлено);
+                    answer = await GetProblemsMessageAsync(message.From!.Id, WhatTheProblem.Поставлено);
                     await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
                     break;
 
@@ -71,11 +72,11 @@ namespace Infrastructure.Services.Telegram
                         await AnswerIsUserNotRegistered(message, cancellationToken);
                         break;
                     }
-                    var inlineKeyboard = await GetInlineKeyboardMyProblems(message.From!.Id, "GetModifiedProblem");
+                    var inlineKeyboard = await GetInlineKeyboardWithProblemsAsync(message.From!.Id, "GetModifiedProblem");
                     if (inlineKeyboard.InlineKeyboard == null)
-                        answer = "Нет задача(проблем), что можно было бы изменить";
+                        answer = "Нет задач, что можно было бы изменить";
                     else
-                        answer = "Выберете Задачу(Проблему), что хотите изменить:";
+                        answer = "Выберете Задачу, что хотите изменить:";
                     await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken, replyMarkup: inlineKeyboard);
                     break;
 
@@ -98,7 +99,7 @@ namespace Infrastructure.Services.Telegram
                         await AnswerIsUserNotRegistered(message, cancellationToken);
                         break;
                     }
-                    answer = await ChangeTelegramUserPosition(message.From!.Id, PositionEnum.ТехСпециалист);
+                    answer = await ChangeTelegramUserPosition(message.From!.Id, Positions.ТехСпециалист);
                     await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
                     break;
 
@@ -108,7 +109,7 @@ namespace Infrastructure.Services.Telegram
                         await AnswerIsUserNotRegistered(message, cancellationToken);
                         break;
                     }
-                    answer = await ChangeTelegramUserPosition(message.From!.Id, PositionEnum.Администратор);
+                    answer = await ChangeTelegramUserPosition(message.From!.Id, Positions.Администратор);
                     await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
                     break;
 
@@ -118,7 +119,7 @@ namespace Infrastructure.Services.Telegram
                         await AnswerIsUserNotRegistered(message, cancellationToken);
                         break;
                     }
-                    answer = await ChangeTelegramUserPosition(message.From!.Id, PositionEnum.СуперАдминистратор);
+                    answer = await ChangeTelegramUserPosition(message.From!.Id, Positions.СуперАдмин);
                     await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
                     break;
 
@@ -132,6 +133,26 @@ namespace Infrastructure.Services.Telegram
                     await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
                     break;
 
+                case "1cbotproblems":
+                    if (!isRegistered)
+                    {
+                        await AnswerIsUserNotRegistered(message, cancellationToken);
+                        break;
+                    }
+                    answer = await GetProblemsMessageAsync(message.From!.Id, WhatTheProblem.Поставил_Бот);
+                    await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
+                    break;
+
+                case "notresponsible":
+                    if (!isRegistered)
+                    {
+                        await AnswerIsUserNotRegistered(message, cancellationToken);
+                        break;
+                    }
+                    answer = await GetProblemsMessageAsync(message.From!.Id, WhatTheProblem.Не_принятые);
+                    await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
+                    break;
+
                 default:
                     if (message.Chat.Type == ChatType.Private)
                     {
@@ -139,102 +160,6 @@ namespace Infrastructure.Services.Telegram
                     }
                     break;
             }
-        }
-
-        private async Task<bool> UserIsRegistered (long telegramId)
-        {
-            var telegramUser = await _service.GetUserTelegramByTelegramId(telegramId);
-            return telegramUser != null ? true : false;
-        }
-        private async Task AnswerIsUserNotRegistered (Message message, CancellationToken cancellationToken)
-        {
-            var answer = "Пользователь не найден в системе, зарегестрируйтесь!";
-            await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
-        }
-        /// <summary>
-        /// Создать список доступных задач(проблем)
-        /// </summary>
-        /// <param name="telegramId">Telegram Id пользователя</param>
-        /// <param name="callbackData">Какая команда будт выбрана в методе: "OnCommand",
-        /// необходима для опеределения от какой команды получено</param>
-        /// <returns>Список кнопок с проблемами для выбора</returns>
-        private async Task<InlineKeyboardMarkup> GetInlineKeyboardMyProblems (long telegramId, string callbackData)
-        {
-            var keyboardMarkup = new InlineKeyboardMarkup();
-            var problems = (await _service.GetAllProblemsByTelegramIdAsync(telegramId)).ToList();
-            TimeSpan ts = new TimeSpan();
-
-            var keyboardButtons = new InlineKeyboardButton[problems.Count() + 1][];
-            for (int i = 0; i < problems.Count(); i++)
-            {
-                ts = DateTime.Now - problems[i].CreateDateTime;
-                keyboardButtons[i] = new InlineKeyboardButton[]
-                {
-                    InlineKeyboardButton.SetCallbackData($"Id: {problems[i].Id}, " +
-                    $"Задача: {problems[i].Text}, " +
-                    $"Приоритет: {problems[i].Priority}, " +
-                    $"Задача на выполнении (дней): {ts.Days}, " +
-                    $"Поставил: {problems[i].UserCreateProblem?.Name ?? "-"}, Выполняет: {problems[i].UserGetProblem?.Name ?? "-"}"
-                    ,$"{callbackData} {problems[i].Id}")
-                };
-            }
-            keyboardButtons[problems.Count()] = new InlineKeyboardButton[]
-            {
-                InlineKeyboardButton.SetCallbackData("Закрыть", "Nothing")
-            };
-            keyboardMarkup.InlineKeyboard = keyboardButtons;
-            return keyboardMarkup;
-        }
-
-        private async Task<string> ChangeTelegramUserPosition(long telegramId, PositionEnum position)
-        {
-            return await _service.ChangePositionByTelegramUserIdAsync(telegramId, position);
-        }
-
-        /// <summary>
-        /// Получить список проблем в формате строки
-        /// </summary>
-        /// <param name="telegramId">Id пользователя Телеграм</param>
-        /// <param name="whatTheProblem">Какие проблемы, поставленные или получаемые</param>
-        /// <returns>Строка вида HTML</returns>
-        private async Task<string> GetProblemsMessage (long telegramId, WhatTheProblem whatTheProblem)
-        {
-            var message = $"Задач(Проблем) что {whatTheProblem}, не найдено!";
-            IEnumerable<Problem> result = new List<Problem>();
-
-            switch(whatTheProblem)
-            {
-                case WhatTheProblem.Получено:
-                    result = await _service.GetPerformedProblemsByTelegramIdAsync(telegramId);
-                    break;
-                case WhatTheProblem.Поставлено:
-                    result = await _service.GetDeliveredProblemsByTelegramIdAsync(telegramId);
-                    break;
-            }
-
-            if(result.Count() != 0)
-            {
-                message = $"📝<b>---Кол-во Задач(Проблем) что {whatTheProblem} : {result.Count()}шт.---</b>📝\n\n";
-                foreach (var problem in result)
-                {
-                    message += $"Id задачи(ошибки): <b>{problem.Id}</b>\n" +
-                        $"Текст: <b>{problem.Text}</b>\nПриоритет: <b>{problem.Priority}</b> \\ Создан: <b>{problem.CreateDateTime.ToShortDateString()}</b>\n" +
-                        $"Поставил: <b>{problem.UserCreateProblem!.Name}</b> \\ Выполняет: <b>{problem.UserGetProblem?.Name ?? "-"}</b>\n\n";
-                    foreach (var answer in problem.Answers)
-                    {
-                        message += $"🗨️ <i>{answer.UserCreate!.Name}</i>: \n{answer.Text}\n";
-                    }
-                    message += "\n➖➖➖➖➖\n\n";
-                }
-            }
-            return message;
-        }
-
-        private enum WhatTheProblem
-        {
-            Поставлено = 1,
-            Получено = 2,
-            Все = 3
         }
     }
 }

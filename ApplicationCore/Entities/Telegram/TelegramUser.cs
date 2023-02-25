@@ -1,4 +1,5 @@
 ﻿using ApplicationCore.Entities.Base;
+using ApplicationCore.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -18,7 +19,7 @@ namespace ApplicationCore.Entities.Telegram
             Name = user.FirstName;
             TelegramName = user.Username;
         }
-        public TelegramUser(long telegramId, string name, string telegramName, PositionEnum position = PositionEnum.Пользователь)
+        public TelegramUser(long telegramId, string name, string telegramName, Positions position = Positions.Пользователь)
         {
             TelegramId = telegramId;
             Name = name;
@@ -31,7 +32,7 @@ namespace ApplicationCore.Entities.Telegram
         public string TelegramName { get; set; }
 
         [Required]
-        public PositionEnum Position { get; set; } = PositionEnum.Пользователь;
+        public Positions Position { get; set; } = Positions.Пользователь;
 
         [Required]
         public long TelegramId { get; set; }

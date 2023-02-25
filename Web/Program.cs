@@ -1,15 +1,24 @@
+using ApplicationCore.Models;
+using ApplicationCore.Services.Api;
 using Ardalis.ListStartupServices;
+using Ardalis.Result;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using AutoMapper;
 using Infrastructure;
 using Infrastructure.Data.Identity;
 using Infrastructure.Data.Telegram;
 using Infrastructure.Services.Telegram;
 using Infrastructure.Settings;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
 using Serilog;
+using System.Text.Json.Serialization;
 using Web.Configuration;
+using Web.Interfaces.Telegram;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,12 +75,13 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 //Option is  Disable Required not Nullable classes
 builder.Services.AddControllersWithViews(options => options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true).AddNewtonsoftJson();
 builder.Services.AddRazorPages();
-
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "1С to API", Version = "v1" });
     c.EnableAnnotations();
 });
+
 
 builder.Services.SetServices();
 
@@ -84,6 +94,10 @@ builder.Services.Configure<ServiceConfig>(config =>
     config.Path = "/listservices";
 });
 
+builder.Services.Configure<JsonSerializerSettings>(options =>
+{
+    options.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+});
 
 //builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 //{
@@ -99,6 +113,10 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseShowAllServicesMiddleware();
+    app.UseSwagger();
+    app.UseSwaggerUI(options => {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    });
 }
 else
 {
@@ -111,19 +129,38 @@ app.UseStaticFiles();
 app.UseAuthorization();
 app.UseCookiePolicy();
 
-app.UseSwagger();
-app.UseSwaggerUI(options => {
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-});
-
 app.MapRazorPages();
 app.MapDefaultControllerRoute();
+
+app.MapPost("api/1c/problem", async ([FromHeader(Name = "1CToken")] string token, IBot1CService botService, Element1CToGetError elementError) =>
+{
+    if (token == app.Configuration["Telegram:1CToken"])
+    {
+        try
+        {
+            var problem = await botService.AddProblemAsync(elementError);
+
+            if (problem == null)
+                return Results.Problem("Ошибка добавления модели...");
+
+            await botService.SendMessagesByPositionAsync(ApplicationCore.Enums.Positions.ТехСпециалист, problem, true);
+            return Results.Ok();
+
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem(ex.Message);
+        }
+    }
+
+    return Results.Unauthorized();
+});
 
 // Seed Database
 using (var scope = app.Services.CreateScope())
 {
     var scopeProvider = scope.ServiceProvider;
-
+    
     try
     {
         var webContext = scopeProvider.GetRequiredService<TelegramContext>();

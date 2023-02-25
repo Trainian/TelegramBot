@@ -1,4 +1,5 @@
 ﻿using ApplicationCore.Entities.Base;
+using ApplicationCore.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -7,12 +8,12 @@ namespace ApplicationCore.Entities.Telegram
     public class Problem : BaseEntity
     {
         public Problem(){}
-        public Problem(string text, int userId, string? img = null, int userGetId = 0)
+        public Problem(string text, int userId, Prioritys priority, string? img = null)
         {
             Text = text;
-            Img = img;
             UserCreateProblemId = userId;
-            UserGetProblemId = userGetId != 0 ? userGetId : null;
+            Priority = priority;
+            Img = img;
             CreateDateTime = DateTime.Now;
         }
 
@@ -21,7 +22,7 @@ namespace ApplicationCore.Entities.Telegram
         public string? Img { get; set; }
 
         [Required]
-        public PriorityEnum Priority { get; set; } = PriorityEnum.Низкий;
+        public Prioritys Priority { get; set; } = Prioritys.Низкий;
         public ICollection<Answer> Answers { get; set; } = new List<Answer>();
 
         [Column("datetime2")]

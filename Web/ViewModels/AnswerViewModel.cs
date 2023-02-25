@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using Web.ViewModels.Base;
 
 namespace Web.ViewModels
@@ -15,7 +16,9 @@ namespace Web.ViewModels
         [Required]
         public int UserCreateId { get; set; }
 
+        [JsonIgnore]
         public ProblemViewModel? Problem { get; set; }
+        
         public UserViewModel? UserCreate { get; set; }
     }
 }

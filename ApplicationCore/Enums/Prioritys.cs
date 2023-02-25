@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ApplicationCore.Entities.Telegram
+namespace ApplicationCore.Enums
 {
-    public enum PriorityEnum : byte
+    public enum Prioritys : byte
     {
         Низкий = 1,
         Средний = 2,

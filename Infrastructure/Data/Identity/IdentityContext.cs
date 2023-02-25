@@ -8,6 +8,7 @@ namespace Infrastructure.Data.Identity
         public IdentityContext(DbContextOptions<IdentityContext> options)
             : base(options)
         {
+            //Database.EnsureCreated();
         }
     }
 }

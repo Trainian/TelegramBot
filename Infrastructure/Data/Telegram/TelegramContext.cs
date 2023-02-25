@@ -13,7 +13,7 @@ namespace Infrastructure.Data.Telegram
         public TelegramContext (DbContextOptions<TelegramContext> options)
             : base(options)
         {
-
+            //Database.EnsureCreated();
         }
 
         public DbSet<Problem> Problems { get; set; }

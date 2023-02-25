@@ -26,6 +26,7 @@ namespace Web.Configuration
             services.AddScoped(typeof(IProblemService), typeof(ProblemService));
             services.AddScoped(typeof(IAnswerService), typeof(AnswerService));
             services.AddScoped(typeof(IUserService), typeof(UserService));
+            services.AddScoped(typeof(IBot1CService), typeof(Bot1CService));
             services.AddAutoMapper(typeof(MapperSettings));
             return services;
         }

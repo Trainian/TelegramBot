@@ -13,5 +13,6 @@ namespace ApplicationCore.Repositories.Telegram
     {
         Task<TelegramUser> CreateTelegramUserAsync(User user);
         Task<TelegramUser?> GetByTelegramIdAsync(long telegramId);
+        Task<TelegramUser?> GetByNameAsync(string name);
     }
 }

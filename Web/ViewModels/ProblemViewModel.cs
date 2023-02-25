@@ -1,5 +1,6 @@
-﻿using ApplicationCore.Entities.Telegram;
+﻿using ApplicationCore.Enums;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using Web.ViewModels.Base;
 
 namespace Web.ViewModels
@@ -11,7 +12,7 @@ namespace Web.ViewModels
         public string? Img { get; set; }
 
         [Required]
-        public PriorityEnum Priority { get; set; } = PriorityEnum.Низкий;
+        public Prioritys Priority { get; set; } = Prioritys.Низкий;
         public ICollection<AnswerViewModel> Answers { get; set; } = new List<AnswerViewModel>();
         public DateTime CreateDateTime { get; set; }
         public bool IsComplited { get; set; }
@@ -23,6 +24,7 @@ namespace Web.ViewModels
 
 
         public UserViewModel? UserCreateProblem { get; set; }
+
         public UserViewModel? UserGetProblem { get; set; }
     }
 }

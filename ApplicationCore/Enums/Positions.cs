@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ApplicationCore.Entities.Telegram
+namespace ApplicationCore.Enums
 {
-    public enum PositionEnum : byte
+    public enum Positions : byte
     {
         Пользователь = 1,
         ТехСпециалист = 2,
         Администратор = 3,
-        СуперАдминистратор = 4
+        СуперАдмин = 4
     }
 }

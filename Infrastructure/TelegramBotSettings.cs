@@ -27,9 +27,11 @@ namespace Infrastructure.Settings
                 Api.SetMyCommands(
                     new BotCommand("help", "Как работать с ботом ?"),
                     new BotCommand("tasks", "Просмотреть задачу"),
-                    new BotCommand("problemedit", "Редактировать задачу(проблему)"),
-                    new BotCommand("deliveredproblems", "Показать ВСЕ поставленные МНОЙ задачи(проблемы)"),
-                    new BotCommand("performedproblems", "Показать ВСЕ посталвенные МНЕ задачи(проблемы)"),
+                    new BotCommand("problemedit", "Редактировать задачу"),
+                    new BotCommand("deliveredproblems", "Поставленные мной задачи"),
+                    new BotCommand("performedproblems", "Поставленные мне задачи"),
+                    new BotCommand("1cbotproblems", "Поставленные ботом 1С задачи"),
+                    new BotCommand("notresponsible", "Не принятые задачи"),
                     new BotCommand("register", "Зарегестрироваться на сервере"));
 
                 Api.DeleteWebhook();

@@ -14,14 +14,17 @@ namespace Infrastructure.Services.Telegram
     {
         private ITelegramApiService _service;
         private ILogger<TelegramBotService> _logger;
+        private IConfiguration _configuration;
 
 
         public TelegramBotService(
             TelegramBotSettings botProperties,
             ITelegramApiService service,
+            IConfiguration configuration,
             ILogger<TelegramBotService> logger) : base(botProperties)
         {
             _service = service;
+            _configuration = configuration;
             _logger = logger;
         }
     }

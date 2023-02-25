@@ -1,10 +1,14 @@
 ﻿using ApplicationCore.Entities.Telegram;
+using ApplicationCore.Enums;
+using ApplicationCore.Models;
 using ApplicationCore.Repositories.Telegram;
 using ApplicationCore.Services.Api;
+using Infrastructure.Services.Telegram;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Telegram.BotAPI.AvailableTypes;
+using Types = Telegram.BotAPI.AvailableTypes;
 
 namespace Infrastructure.Services.Api
 {
@@ -32,28 +36,20 @@ namespace Infrastructure.Services.Api
             _logger = logger;
         }
 
-        public async Task<Problem> AddProblemAsync(string text, long telegramId, string? imgPath = null, string? userGet = null)
+        public async Task<Problem> AddProblemAsync(string text, long telegramId, ResponibleTypes responibleType, string whoGet, Prioritys priority, string? imgPath = null, Types.File? document = null)
         {
-            string? imageLink = null; // Изображение
-            int userIdResponsible = 0; // Id пользователя, кому ставится задача
-            int userDbResponsible; // Пользователь в системе
+            string? imageLink = null;
+            var user = await _userRepository.GetByTelegramIdAsync(telegramId);
 
-            var userDbCreater = await _userRepository.GetByTelegramIdAsync(telegramId);
-
-            // Проверяем, отправлялось ли изображение и загружаем его
             if (imgPath != null)
                 imageLink = await DownloadImage(imgPath);
+            else if (document != null)
+                imageLink = await DownloadFile(document);
 
-            // Проверяем соответсвует ли 'userGet' типу Int32, затем существует ли такой пользователь в БД
-            // При отсутствии а БД, Id пользователя равен '0'
-            if(int.TryParse(userGet, out userDbResponsible))
-            {
-                var telegramUserDb = await _userRepository.GetByIdAsync(userDbResponsible);
-                userIdResponsible = telegramUserDb?.Id ?? 0;
-            }
+            Problem problem = new Problem(text, user!.Id, priority, imageLink);
 
-            // Создаем новый экземпляр объекта задачи
-            var problem = new Problem(text, userDbCreater!.Id, imageLink, userIdResponsible);
+            if (responibleType == ResponibleTypes.Пользователь)
+                problem.UserGetProblemId = Int32.Parse(whoGet);
 
             // Добавляем задачу в БД и отправляем ответ
             return await _problemRepository.AddAsync(problem);
@@ -75,7 +71,7 @@ namespace Infrastructure.Services.Api
             return "Успешное добавление комментария";
         }
 
-        public async Task<string> ChangePositionByTelegramUserIdAsync(long telegramUserId, PositionEnum position)
+        public async Task<string> ChangePositionByTelegramUserIdAsync(long telegramUserId, Positions position)
         {
             var telegramUserDb = await GetUserTelegramByTelegramId(telegramUserId);
             if (telegramUserDb == null)
@@ -122,6 +118,12 @@ namespace Infrastructure.Services.Api
             return result;
         }
 
+        public async Task<IEnumerable<Problem>> GetAllProblemsWithoutResponsible()
+        {
+            var problems = await _problemRepository.GetAsync(p => p.UserGetProblemId == null && p.IsComplited == false);
+            return problems.ToList();
+        }
+
         public async Task<Problem> GetDeliveredProblemByTelegramIdAsync(long telegramId, int problemId)
         {
             var user = await GetUserTelegramByTelegramId(telegramId);
@@ -139,9 +141,13 @@ namespace Infrastructure.Services.Api
             return await _problemRepository.GetAsync(p => p.UserCreateProblemId == user.Id && p.IsComplited == false);
         }
 
-        public async Task<List<TelegramUser>> GetListUserTelegramByPositionAsync(PositionEnum position)
+        public async Task<List<TelegramUser>> GetListUserTelegramByPositionAsync(Positions position = Positions.ТехСпециалист, bool andHigher = false)
         {
-            var telegramUsersDb = await _userRepository.GetAsync(u => u.Position == position);
+            IReadOnlyList<TelegramUser> telegramUsersDb;
+            if (andHigher)
+                telegramUsersDb = await _userRepository.GetAsync(u => u.Position >= position);
+            else
+                telegramUsersDb = await _userRepository.GetAsync(u => u.Position == position);
             return telegramUsersDb.ToList();
         }
 
@@ -162,13 +168,9 @@ namespace Infrastructure.Services.Api
             return await _problemRepository.GetAsync(p => p.UserGetProblemId == telegramUserDb.Id && p.IsComplited == false);
         }
 
-        public async Task<Problem> GetProblemByProblemId(long telegramId, int problemId)
+        public async Task<Problem> GetProblemByProblemIdAsync(int problemId)
         {
-            var telegramUserDb = await GetUserTelegramByTelegramId(telegramId);
-            if (telegramUserDb == null)
-                return new Problem();
-            var problems = await GetAllProblemsByTelegramIdAsync(telegramId);
-            return problems.FirstOrDefault(p => p.Id == problemId) ?? new Problem();
+            return await _problemRepository.GetByIdAsync(problemId);
         }
 
         public async Task<TelegramUser?> GetUserTelegramByTelegramId(long telegramId)
@@ -200,6 +202,28 @@ namespace Infrastructure.Services.Api
                 using var fs = new FileStream(pathDownload + imageName, FileMode.OpenOrCreate);
                 await s.CopyToAsync(fs);
                 result = String.Concat("/images/" + imageName);
+            }
+            return result;
+        }
+
+        private async Task<string> DownloadFile(Types.File document)
+        {
+            string result = "";
+            var botToken = _configuration.GetSection("Telegram")["BotToken"];
+            var downloadStringBigImg = String.Concat("https://api.telegram.org/file/bot", botToken, "/", document.FilePath);
+            var pathDownload = String.Concat("wwwroot/documents/");
+            var args = document.FilePath.Split(".");
+            var imageName = String.Concat(DateTime.Now.Ticks + "." + args.Last());
+
+            var client = new HttpClient();
+
+            var response = await client.GetAsync(downloadStringBigImg);
+            if (response.IsSuccessStatusCode)
+            {
+                using var s = await client.GetStreamAsync(downloadStringBigImg);
+                using var fs = new FileStream(pathDownload + imageName, FileMode.OpenOrCreate);
+                await s.CopyToAsync(fs);
+                result = String.Concat("/documents/" + imageName);
             }
             return result;
         }

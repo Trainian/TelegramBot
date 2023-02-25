@@ -1,4 +1,5 @@
 ﻿using ApplicationCore.Entities.Telegram;
+using ApplicationCore.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,16 +12,14 @@ namespace Infrastructure.Data.Telegram
     {
         public static async Task SeedAsync(TelegramContext webContext)
         {
-            //if (webContext.Users.Count() == 0)
-            //{
-            //    var testUser = new TelegramUser(1, "Test", "TelegramTest", PositionEnum.ТехСпециалист);
-            //    var trainianUser = new TelegramUser(366459395, "Trainian", "Trainian_Z_V", PositionEnum.ТехСпециалист);
+            if (webContext.Users.Count() == 0)
+            {
+                var Bot = new TelegramUser(1, "1CBot", "1CBot", Positions.СуперАдмин);
 
-            //    webContext.Set<TelegramUser>().Add(testUser);
-            //    webContext.Set<TelegramUser>().Add(trainianUser);
+                webContext.Set<TelegramUser>().Add(Bot);
 
-            //    await webContext.SaveChangesAsync();
-            //}
+                await webContext.SaveChangesAsync();
+            }
         }
     }
 }

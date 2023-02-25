@@ -46,6 +46,12 @@ namespace Infrastructure.Repositories.Telegram
                 .FirstAsync(ut => ut.Id == id);
         }
 
+        public async Task<TelegramUser?> GetByNameAsync(string name)
+        {
+            return await _context.Set<TelegramUser>()
+                .FirstOrDefaultAsync(u => u.Name == name);
+        }
+
         public async Task<TelegramUser?> GetByTelegramIdAsync(long telegramId)
         {
             return await _context.Set<TelegramUser>()

@@ -46,6 +46,8 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\images\" />
+    <Folder Include="API\" />
+    <Folder Include="wwwroot\documents\" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,6 @@
-﻿using ApplicationCore.Entities.Telegram;
+﻿using ApplicationCore.Enums;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using Web.ViewModels.Base;
 
 namespace Web.ViewModels
@@ -16,9 +17,13 @@ namespace Web.ViewModels
         public int TelegramId { get; set; }
 
         [Required]
-        public PositionEnum Position { get; set; }
+        public Positions Position { get; set; }
+
+        [JsonIgnore]
         public ICollection<ProblemViewModel> Problems { get; set; } = new List<ProblemViewModel>();
+        [JsonIgnore]
         public ICollection<ProblemViewModel> GetProblems { get; set; } = new List<ProblemViewModel>();
+        [JsonIgnore]
         public ICollection<AnswerViewModel> Answers { get; set; } = new List<AnswerViewModel>();
     }
 }
