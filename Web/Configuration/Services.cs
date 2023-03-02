@@ -9,6 +9,7 @@ using ApplicationCore.Services.Api;
 using Web.AutoMapper;
 using Web.Interfaces.Telegram;
 using Web.Services.Telegram;
+using Web.Services.Timers;
 
 namespace Web.Configuration
 {
@@ -28,6 +29,9 @@ namespace Web.Configuration
             services.AddScoped(typeof(IUserService), typeof(UserService));
             services.AddScoped(typeof(IBot1CService), typeof(Bot1CService));
             services.AddAutoMapper(typeof(MapperSettings));
+
+            services.AddHostedService<TimerService>();
+            services.AddScoped<IScopedProcessingTimerService, ScopedProcessingTimerService>();
             return services;
         }
     }

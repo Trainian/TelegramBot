@@ -7,18 +7,21 @@ using Telegram.BotAPI.AvailableTypes;
 using Telegram.BotAPI.UpdatingMessages;
 using ApplicationCore.Entities.Telegram;
 using Types = Telegram.BotAPI.AvailableTypes;
+using Microsoft.Extensions.Logging;
+using Infrastructure.Static;
+using System.Threading;
 
 namespace Infrastructure.Services.Telegram
 {
     public partial class TelegramBotService : AsyncTelegramBotBase<TelegramBotSettings>
     {
         /// <summary>
-        /// 
+        /// Создать новую задачу
         /// </summary>
-        /// <param name="callbackQuery"></param>
-        /// <param name="responibleType"></param>
-        /// <param name="priority"></param>
-        /// <param name="whoGet"></param>
+        /// <param name="callbackQuery">Ответ от клиента</param>
+        /// <param name="responibleType">Куда ставить задачу</param>
+        /// <param name="priority">Приоритет задачи</param>
+        /// <param name="whoGet">Получатель (Пользователь\Отдел)</param>
         /// <returns></returns>
         protected async Task<string> CreateNewTask(CallbackQuery callbackQuery, ResponibleTypes responibleType, string whoGet, Prioritys priority)
         {
@@ -55,28 +58,11 @@ namespace Infrastructure.Services.Telegram
         }
 
         /// <summary>
-        /// Изменить приоритет задачи
-        /// </summary>
-        /// <param name="telegramId">Telegram ID пользователя изменяющего приоритет</param>
-        /// <param name="problemId"></param>
-        /// <param name="priority"></param>
-        /// <returns></returns>
-        protected async Task<string> ChangePriorityProblem(long telegramId, string problemId, string priority)
-        {
-            var problem = await _service.GetProblemByProblemIdAsync(int.Parse(problemId));
-            if (problem == null)
-                return "Ошибка при изменении приоритета";
-            problem.Priority = Enum.Parse<Prioritys>(priority);
-            await _service.UpdateProblemAsync(problem);
-            return "Успешное обновление приоритета!";
-        }
-
-        /// <summary>
-        /// Обновить приоритет Задачи
+        /// Изменить задачу
         /// </summary>
         /// <param name="callbackQuery">Сообщение в котором происходит выбор</param>
         /// <param name="problemId">Id проблемы</param>
-        /// <param name="modification">Строка модификации изи перечислителя ProblemModifications</param>
+        /// <param name="modification">Строка модификации из перечислителя ProblemModifications</param>
         /// <returns></returns>
         protected async Task ProblemUpdate(CallbackQuery callbackQuery, string problemId, string modification)
         {
@@ -136,56 +122,28 @@ namespace Infrastructure.Services.Telegram
         }
 
         /// <summary>
-        /// Получить список проблем в формате строки
+        /// Изменить приоритет задачи
         /// </summary>
-        /// <param name="telegramId">Id пользователя Телеграм</param>
-        /// <param name="whatTheProblem">Какие проблемы, поставленные или получаемые</param>
-        /// <returns>Строка вида HTML</returns>
-        protected async Task<string> GetProblemsMessageAsync(long telegramId, WhatTheProblem whatTheProblem)
+        /// <param name="telegramId">Telegram ID пользователя изменяющего приоритет</param>
+        /// <param name="problemId">ID задачи</param>
+        /// <param name="priority">Новый приоритет</param>
+        /// <returns></returns>
+        protected async Task<string> ChangePriorityProblem(long telegramId, string problemId, string priority)
         {
-            var message = $"Задач что {whatTheProblem}, не найдено!";
-            IEnumerable<Problem> result = new List<Problem>();
-
-            switch (whatTheProblem)
-            {
-                case WhatTheProblem.Получено:
-                    result = await _service.GetPerformedProblemsByTelegramIdAsync(telegramId);
-                    break;
-                case WhatTheProblem.Поставлено:
-                    result = await _service.GetDeliveredProblemsByTelegramIdAsync(telegramId);
-                    break;
-                case WhatTheProblem.Поставил_Бот:
-                    result = await _service.GetDeliveredProblemsByTelegramIdAsync(0);
-                    break;
-                case WhatTheProblem.Не_принятые:
-                    result = await _service.GetAllProblemsWithoutResponsible();
-                    break;
-            }
-
-            if (result.Count() != 0)
-            {
-                message = $"📝<b>---Кол-во Задач(Проблем) что {whatTheProblem} : {result.Count()}шт.---</b>📝\n\n";
-                foreach (var problem in result)
-                {
-                    message += $"Id задачи(ошибки): <b>{problem.Id}</b>\n" +
-                        $"Текст: <b>{problem.Text}</b>\nПриоритет: <b>{problem.Priority}</b> \\ Создан: <b>{problem.CreateDateTime.ToShortDateString()}</b>\n" +
-                        $"Поставил: <b>{problem.UserCreateProblem!.Name}</b> \\ Выполняет: <b>{problem.UserGetProblem?.Name ?? "-"}</b>\n\n";
-                    foreach (var answer in problem.Answers)
-                    {
-                        message += $"🗨️ <i>{answer.UserCreate!.Name}</i>: \n{answer.Text}\n";
-                    }
-                    message += "\n➖➖➖➖➖\n\n";
-                }
-            }
-            return message;
+            var problem = await _service.GetProblemByProblemIdAsync(int.Parse(problemId));
+            if (problem == null)
+                return "Ошибка при изменении приоритета";
+            problem.Priority = Enum.Parse<Prioritys>(priority);
+            await _service.UpdateProblemAsync(problem);
+            return "Успешное обновление приоритета!";
         }
 
         /// <summary>
-        /// Создание нового сообщения
+        /// Создать ответ на задачу
         /// </summary>
-        /// <param name="callbackQuery"></param>
-        /// <param name="problemId"></param>
-        /// <returns></returns>
+        /// <param name="callbackQuery">Ответ от клиента</param>
+        /// <param name="problemId">ID задачи</param>
+        /// <returns>Сообщение об успехе или ошибке</returns>
         protected async Task<string> CreateNewAnswer(CallbackQuery callbackQuery, string problemId)
         {
             // Обработка тестового сообщения
@@ -214,10 +172,32 @@ namespace Infrastructure.Services.Telegram
         /// </summary>
         /// <param name="telegramId">Telegram Id пользователя, которому меняется приоритет</param>
         /// <param name="position">Новая позиция пользователя</param>
-        /// <returns></returns>
+        /// <returns>Сообщение об успехе или ошибке</returns>
         protected async Task<string> ChangeTelegramUserPosition(long telegramId, Positions position)
         {
             return await _service.ChangePositionByTelegramUserIdAsync(telegramId, position);
+        }
+
+        /// <summary>
+        /// Проверить наличие включенных уведомлений и разослать при необходимости
+        /// </summary>
+        /// <param name="o">null</param>
+        public async void CheckNotifications(object o)
+        {
+            var lastUpdate = Options.LastNotification.ToString("dd.MM.yy hh");
+            var dtNow = DateTime.Now.ToString("dd.MM.yy hh");
+
+            if(lastUpdate != dtNow)
+            {
+                var users = await _service.GetListUsersToNeedNotification();
+                foreach (var user in users)
+                {
+                    var answer = await GetProblemsMessageAsync(user.TelegramId, WhatTheProblem.Получено);
+                    await Api.SendMessageAsync(user.TelegramId, answer, parseMode: ParseMode.HTML);
+                }
+                _logger.LogInformation($"({DateTime.Now}) Сработал метод уведомления, с кол-во пользователей: {users.Count()}, прошлый запуск: {Options.LastNotification.ToShortTimeString()}");
+            }
+            Options.LastNotification = DateTime.Now;
         }
     }
 }

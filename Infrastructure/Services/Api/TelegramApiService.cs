@@ -3,10 +3,12 @@ using ApplicationCore.Enums;
 using ApplicationCore.Models;
 using ApplicationCore.Repositories.Telegram;
 using ApplicationCore.Services.Api;
+using Infrastructure.Extensions;
 using Infrastructure.Services.Telegram;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Text;
 using Telegram.BotAPI.AvailableTypes;
 using Types = Telegram.BotAPI.AvailableTypes;
 
@@ -226,6 +228,88 @@ namespace Infrastructure.Services.Api
                 result = String.Concat("/documents/" + imageName);
             }
             return result;
+        }
+
+        //TODO: Объединить методы ChangeUserDayNotification и ChangeUserTimeNotification DRY
+        public async Task ChangeUserDayNotification(long telegramId, DayOfWeekRus day)
+        {
+            var ND = new List<DayOfWeekRus>();
+            var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+            if(!String.IsNullOrEmpty(user!.NotificationDays))
+                ND = user!.NotificationDays!.Split(';').Select(s => (DayOfWeekRus)Enum.Parse(typeof(DayOfWeekRus), s)).ToList();
+
+            var isFound = false;
+            foreach(var d in ND)
+            {
+                if (day == d)
+                    isFound = true;
+            }
+
+            if (isFound)
+                ND.Remove(day);
+            else
+                ND.Add(day);
+
+            var result = string.Join(';', ND);
+            user.NotificationDays = result;
+            await _userRepository.UpdateAsync(user);
+        }
+
+        public async Task ChangeUserTimeNotification(long telegramId, string time)
+        {
+            var hour = Int32.Parse(time);
+            var NH = new List<int>();
+            var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+            if (!String.IsNullOrEmpty(user!.NotificationHours))
+                NH = user!.NotificationHours!.Split(';').Select(s => Int32.Parse(s)).ToList();
+
+            var isFound = false;
+            foreach(var h in NH)
+            {
+                if (hour == h)
+                    isFound = true;
+            }
+
+            if (isFound)
+                NH.Remove(hour);
+            else
+                NH.Add(hour);
+
+            var result = string.Join(';', NH);
+            user.NotificationHours = result;
+            await _userRepository.UpdateAsync(user);
+        }
+
+        public async Task<IEnumerable<TelegramUser>> GetListUsersToNeedNotification()
+        {
+            var usersDB = await _userRepository.GetAsNoTrackingAsync(u => !String.IsNullOrEmpty(u.NotificationDays) && !String.IsNullOrEmpty(u.NotificationHours));
+            var userNotificated = new List<TelegramUser>();
+            foreach(var user in usersDB)
+            {
+                var ND = user.NotificationDays!.Split(';').Select(s => (DayOfWeekRus)Enum.Parse(typeof(DayOfWeekRus), s)).ToList();
+
+                var notificateDay = false;
+                foreach (var day in ND)
+                {
+                    if ((int)day == (int)DateTime.Now.GetDayOfWeekRus())
+                    {
+                        notificateDay = true;
+                        break;
+                    }
+                }
+                if (notificateDay)
+                {
+                    var NH = user.NotificationHours!.Split(';').Select(s => Int32.Parse(s)).ToList();
+                    foreach (var hour in NH)
+                    {
+                        if (hour == DateTime.Now.Hour)
+                        {
+                            userNotificated.Add(user);
+                        }
+                    }
+                }
+            }
+            return userNotificated;
         }
     }
 }

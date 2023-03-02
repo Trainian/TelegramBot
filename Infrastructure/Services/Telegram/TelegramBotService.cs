@@ -16,7 +16,6 @@ namespace Infrastructure.Services.Telegram
         private ILogger<TelegramBotService> _logger;
         private IConfiguration _configuration;
 
-
         public TelegramBotService(
             TelegramBotSettings botProperties,
             ITelegramApiService service,

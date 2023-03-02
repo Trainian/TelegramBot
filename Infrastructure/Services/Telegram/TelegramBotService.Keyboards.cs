@@ -14,6 +14,10 @@ namespace Infrastructure.Services.Telegram
 {
     public partial class TelegramBotService : AsyncTelegramBotBase<TelegramBotSettings>
     {
+        private const string HeavyCheckMark = "✔️";
+        private const string RadioButton = "🔘";
+        private const string WhiteCircle = "⚪️";
+
         /// <summary>
         /// Очистить список кнопок
         /// </summary>
@@ -202,5 +206,146 @@ namespace Infrastructure.Services.Telegram
         keyboardMarkup.InlineKeyboard = keyboardButtons;
         return keyboardMarkup;
     }
+
+        /// <summary>
+        /// Получить кнопки для изменений даты или времени уведомлений
+        /// </summary>
+        /// <param name="choose">Строка выбора DayOfWeek или HourOnDay</param>
+        /// <param name="notifications">Текущие выбранные значения пользователя</param>
+        /// <returns>Список кнопок с выбором даты или времени</returns>
+        protected InlineKeyboardMarkup GetInlineLeyboardToChooseNotification(string choose, string notifications)
+        {
+            InlineKeyboardButton[][] buttons;
+
+            if (choose == "DayOfWeek")
+            {
+                var day = 0;
+                var ND = new List<DayOfWeekRus>();
+
+                if (notifications.Length > 0)
+                {
+                    ND = notifications.Split(';').Select(s => (DayOfWeekRus)Enum.Parse(typeof(DayOfWeekRus), s)).ToList();
+                }
+
+                var daysString = GetNotificationsOnDayString(ND).ToList();
+                buttons = new InlineKeyboardButton[4][];
+                for(int i = 0; i < 3; i++)
+                {
+                    buttons[i] = new InlineKeyboardButton[2];
+                    for (int j = 0; j < 2; j++)
+                    {
+                        buttons[i][j] = InlineKeyboardButton.SetCallbackData(daysString[day],
+                            $"NotificationChange DayOfWeek {(DayOfWeekRus)day}");
+                        day++;
+                    }
+                }
+                buttons[3] = new InlineKeyboardButton[]
+                {
+                InlineKeyboardButton.SetCallbackData(daysString[day],
+                    $"NotificationChange DayOfWeek {(DayOfWeekRus)day}"),
+                InlineKeyboardButton.SetCallbackData($"Подтвердить   {HeavyCheckMark}", "Notification HourOnDay")
+                };
+            }
+            else if (choose == "HourOnDay")
+            {
+                var hour = 0;
+                var NH = new List<int>();
+
+                if (notifications.Length > 0)
+                {
+                    NH = notifications.Split(';').Select(s => Int32.Parse(s)).ToList();
+                }
+
+                var hoursString = GetNotificationsOnHourString(NH).ToList();
+                buttons = new InlineKeyboardButton[7][];
+                for (int i = 0; i < 6; i++)
+                {
+                    buttons[i] = new InlineKeyboardButton[4];
+                    for (int j = 0; j < 4; j++)
+                    {
+                        buttons[i][j] = InlineKeyboardButton.SetCallbackData(hoursString[hour],
+                            $"NotificationChange HourOnDay {hour}");
+                        hour++;
+                    }
+                }
+                buttons[6] = new InlineKeyboardButton[]
+                {
+                    InlineKeyboardButton.SetCallbackData("Вернуться","Notification DayOfWeek"),
+                    InlineKeyboardButton.SetCallbackData("Завершить","Nothing Установлено!")
+                };
+            }
+            else
+            {
+                buttons = new InlineKeyboardButton[1][];
+                buttons[0] = new InlineKeyboardButton[]
+                {
+                    InlineKeyboardButton.SetCallbackData("Не предвиденная ошибка","Nothing")
+                };
+            }
+            return new InlineKeyboardMarkup(buttons);
+        }
+
+        /// <summary>
+        /// Выбор настроек
+        /// </summary>
+        /// <returns>Список кнопок с выбором настроек</returns>
+        protected InlineKeyboardMarkup GetInlineKeyboardSettings()
+        {
+            InlineKeyboardButton[][] buttons = new InlineKeyboardButton[2][];
+            buttons[0] = new InlineKeyboardButton[]
+            {
+                InlineKeyboardButton.SetCallbackData($"Настроить уведомления", $"Notification")
+            };
+            buttons[1] = new InlineKeyboardButton[]
+            {
+                InlineKeyboardButton.SetCallbackData($"Вернуться", $"Nothing")
+            };
+            return new InlineKeyboardMarkup(buttons);
+        }
+
+
+
+
+
+        /// <summary>
+        /// Получить строки с значками текущих выбранных значений дня
+        /// </summary>
+        /// <param name="notificationDays">Список выбранных значений дня</param>
+        /// <returns>Список строк с соответсвующими знаками выбора</returns>
+        private IEnumerable<string> GetNotificationsOnDayString(List<DayOfWeekRus> notificationDays)
+        {
+            List<string> days = new List<string>(new string[7]);
+            List<bool> list = new List<bool>(new bool[7]);
+            foreach(var day in notificationDays)
+            {
+                list[(int)day] = true;
+            }
+            for(int i = 0; i < 7; i++)
+            {
+                days[i] = $"{(DayOfWeekRus)i}   " + (list[i] == true ? RadioButton : WhiteCircle);
+            }
+            return days;
+        }
+
+        /// <summary>
+        /// Получить строки с значками текущих выбранных значений времени
+        /// </summary>
+        /// <param name="notificationHours">Список выбранных значений времени</param>
+        /// <returns>Список строк с соответсвующими знаками выбора</returns>
+        private IEnumerable<string> GetNotificationsOnHourString(List<int> notificationHours)
+        {
+            List<string> hours = new List<string>(new string[24]);
+            List<bool> list = new List<bool>(new bool[24]);
+            foreach (var hour in notificationHours)
+            {
+                list[hour] = true;
+            }
+            for(int i = 0; i < 24; i++)
+            {
+                hours[i] = $"{i}:00 " + (list[i] == true ? RadioButton : WhiteCircle);
+            }
+            return hours;
+        }
+
     }
 }

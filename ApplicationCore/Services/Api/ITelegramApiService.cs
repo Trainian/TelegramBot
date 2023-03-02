@@ -24,5 +24,8 @@ namespace ApplicationCore.Services.Api
         Task<string> DeleteProblemByIdAsync(Problem problem);
         Task<int> CountProblemsAsync(long telegramId);
         Task<string> ChangePositionByTelegramUserIdAsync(long telegramUserId, Positions position);
+        Task ChangeUserDayNotification(long telegramId, DayOfWeekRus day);
+        Task ChangeUserTimeNotification(long telegramId, string time);
+        Task<IEnumerable<TelegramUser>> GetListUsersToNeedNotification();
     }
 }

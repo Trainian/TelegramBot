@@ -15,6 +15,7 @@ namespace Infrastructure.Services.Telegram
         {
             var args = commandParameters.Split(' ');
             var isRegistered = await UserIsRegistered(message.From!.Id);
+            var markup = new InlineKeyboardMarkup();
 
             string answer;
 #if DEBUG
@@ -42,7 +43,7 @@ namespace Infrastructure.Services.Telegram
                         break;
                     }
                     answer = string.Format("📝<b>---Выберете задачу, для прочтения---</b>📝");
-                    var markup = await GetInlineKeyboardWithProblemsAsync(message.From.Id, "ShowTasks");
+                    markup = await GetInlineKeyboardWithProblemsAsync(message.From.Id, "ShowTasks");
                     await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, replyMarkup: markup, cancellationToken: cancellationToken);
                     break;
 
@@ -151,6 +152,17 @@ namespace Infrastructure.Services.Telegram
                     }
                     answer = await GetProblemsMessageAsync(message.From!.Id, WhatTheProblem.Не_принятые);
                     await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
+                    break;
+
+                case "settings":
+                    if (!isRegistered)
+                    {
+                        await AnswerIsUserNotRegistered(message, cancellationToken);
+                        break;
+                    }
+                    markup = GetInlineKeyboardSettings();
+                    answer = string.Format("📝<b>---Выберите настройку---</b>📝");
+                    await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, replyMarkup: markup, cancellationToken: cancellationToken);
                     break;
 
                 default:

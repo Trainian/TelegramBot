@@ -19,18 +19,9 @@ using Serilog;
 using System.Text.Json.Serialization;
 using Web.Configuration;
 using Web.Interfaces.Telegram;
+using Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-
-//builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
-//{
-//    config.AddJsonFile("appsettings.json",
-//                       optional: true,
-//                       reloadOnChange: true)
-//          .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json",
-//                        optional: true,
-//                        reloadOnChange: true);
-//});
 
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 
@@ -39,7 +30,7 @@ builder.Host.UseSerilog((ctx, lx) => {
     lx.WriteTo.Console();
     });
 
-builder.Services.AddMemoryCache();
+//builder.Services.AddMemoryCache();
 builder.Services.Configure<CookiePolicyOptions>(options =>
 {
     options.CheckConsentNeeded = context => true;
@@ -59,19 +50,6 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
     .AddEntityFrameworkStores<IdentityContext>()
     .AddDefaultUI();
 
-//builder.Services.ConfigureApplicationCookie(options =>
-//{
-    //options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-    //options.Cookie.Name = "YourAppCookieName";
-    //options.Cookie.HttpOnly = true;
-    //options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
-    //options.LoginPath = "/Identity/Account/Login";
-    //// ReturnUrlParameter requires 
-    ////using Microsoft.AspNetCore.Authentication.Cookies;
-    //options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
-    //options.SlidingExpiration = true;
-//});
-
 //Option is  Disable Required not Nullable classes
 builder.Services.AddControllersWithViews(options => options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true).AddNewtonsoftJson();
 builder.Services.AddRazorPages();
@@ -81,7 +59,6 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "1Ñ to API", Version = "v1" });
     c.EnableAnnotations();
 });
-
 
 builder.Services.SetServices();
 
@@ -98,14 +75,6 @@ builder.Services.Configure<JsonSerializerSettings>(options =>
 {
     options.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
 });
-
-//builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
-//{
-//    containerBuilder.RegisterModule(new DefaultCoreModule());
-//    containerBuilder.RegisterModule(new DefaultInfrastructureModule(builder.Environment.EnvironmentName == "Development"));
-//});
-
-//builder.Logging.AddAzureWebAppDiagnostics(); add this if deploying to Azure
 
 var app = builder.Build();
 

@@ -22,7 +22,10 @@ namespace Infrastructure
             {
                 services.AddDbContext<IdentityContext>(c => c.UseSqlServer(configuration.GetConnectionString("Identity")));
                 services.AddDbContext<TelegramContext>(c => c.UseSqlServer(configuration.GetConnectionString("Telegram"),
-                    o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+                            o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+                //services.AddDbContext<TelegramContext>(c => c.UseSqlServer(configuration.GetConnectionString("Telegram"))
+                //    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+                //services.AddDbContext<TelegramContext>(c => c.UseLazyLoadingProxies().UseSqlServer(configuration.GetConnectionString("Telegram")));
             }
         }
     }

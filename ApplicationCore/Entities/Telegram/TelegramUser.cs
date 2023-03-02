@@ -27,15 +27,22 @@ namespace ApplicationCore.Entities.Telegram
             Position = position;
         }
         [Required]
-        public string Name { get; set; } = "User Name";
+        public string Name { get; set; }
         [Required]
         public string TelegramName { get; set; }
 
         [Required]
-        public Positions Position { get; set; } = Positions.Пользователь;
+        public Positions Position { get; set; }
 
         [Required]
         public long TelegramId { get; set; }
+
+        public string? NotificationDays { get; set; }
+
+        public string? NotificationHours { get; set; }
+
+
+
         public ICollection<Problem> Problems { get; set; } = new List<Problem>();
         public ICollection<Problem> GetProblems { get; set; } = new List<Problem>();
         public ICollection<Answer> Answers { get; set; } = new List<Answer>();

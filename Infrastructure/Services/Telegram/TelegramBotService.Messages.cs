@@ -76,6 +76,8 @@ namespace Infrastructure.Services.Telegram
             }
 		}
 
+        //TODO: Объединить GetProblemInformation с GetProblemsMessageAsync, для формирования сообщения, switch вынести в отдельный метод
+
         /// <summary>
         /// Получить сообщение о задаче
         /// </summary>
@@ -104,6 +106,50 @@ namespace Infrastructure.Services.Telegram
             return message;
         }
 
+        /// <summary>
+        /// Получить список проблем в формате строки
+        /// </summary>
+        /// <param name="telegramId">Id пользователя Телеграм</param>
+        /// <param name="whatTheProblem">Какие проблемы, поставленные или получаемые</param>
+        /// <returns>Строка вида HTML</returns>
+        protected async Task<string> GetProblemsMessageAsync(long telegramId, WhatTheProblem whatTheProblem)
+        {
+            var message = $"Задач что {whatTheProblem}, не найдено!";
+            IEnumerable<Problem> result = new List<Problem>();
+
+            switch (whatTheProblem)
+            {
+                case WhatTheProblem.Получено:
+                    result = await _service.GetPerformedProblemsByTelegramIdAsync(telegramId);
+                    break;
+                case WhatTheProblem.Поставлено:
+                    result = await _service.GetDeliveredProblemsByTelegramIdAsync(telegramId);
+                    break;
+                case WhatTheProblem.Поставил_Бот:
+                    result = await _service.GetDeliveredProblemsByTelegramIdAsync(0);
+                    break;
+                case WhatTheProblem.Не_принятые:
+                    result = await _service.GetAllProblemsWithoutResponsible();
+                    break;
+            }
+
+            if (result.Count() != 0)
+            {
+                message = $"📝<b>---Кол-во Задач что {whatTheProblem} : {result.Count()}шт.---</b>📝\n\n";
+                foreach (var problem in result)
+                {
+                    message += $"Id задачи: <b>{problem.Id}</b>\n" +
+                        $"Текст: <b>{problem.Text}</b>\nПриоритет: <b>{problem.Priority}</b> \\ Создан: <b>{problem.CreateDateTime.ToShortDateString()}</b>\n" +
+                        $"Поставил: <b>{problem.UserCreateProblem!.Name}</b> \\ Выполняет: <b>{problem.UserGetProblem?.Name ?? "-"}</b>\n\n";
+                    foreach (var answer in problem.Answers)
+                    {
+                        message += $"🗨️ <i>{answer.UserCreate!.Name}</i>: \n{answer.Text}\n";
+                    }
+                    message += "\n➖➖➖➖➖\n";
+                }
+            }
+            return message;
+        }
 
         /// <summary>
         /// Сообщение о не Зарегестрированном пользователе

@@ -47,6 +47,11 @@ namespace Infrastructure.Repositories.Base
             return await _context.Set<T>().ToListAsync();
         }
 
+        public async Task<IReadOnlyList<T>> GetAsNoTrackingAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _context.Set<T>().Where(predicate).AsNoTracking().ToListAsync();
+        }
+
         public virtual async Task<IReadOnlyList<T>> GetAsync(Expression<Func<T, bool>> predicate)
         {
             return await _context.Set<T>().Where(predicate).ToListAsync();

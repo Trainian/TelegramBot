@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Infrastructure.Services.Telegram;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Telegram.BotAPI;
 using Telegram.BotAPI.AvailableMethods;
 using Telegram.BotAPI.AvailableTypes;
@@ -9,7 +11,8 @@ namespace Infrastructure.Settings
     public class TelegramBotSettings : IBotProperties
     {
         private readonly BotCommandHelper _commandHelper;
-        public TelegramBotSettings(IConfiguration configuration)
+
+        public TelegramBotSettings(IConfiguration configuration, ILogger<TelegramBotSettings> logger)
         {
             var Token = configuration["Telegram:BotToken"];
             var Url = String.Concat(configuration["ApplicationUrl"], "/api/telegram");
@@ -32,6 +35,7 @@ namespace Infrastructure.Settings
                     new BotCommand("performedproblems", "Поставленные мне задачи"),
                     new BotCommand("1cbotproblems", "Поставленные ботом 1С задачи"),
                     new BotCommand("notresponsible", "Не принятые задачи"),
+                    new BotCommand("settings", "Настройки"),
                     new BotCommand("register", "Зарегестрироваться на сервере"));
 
                 Api.DeleteWebhook();
@@ -42,6 +46,8 @@ namespace Infrastructure.Settings
             //https://api.telegram.org/bot{token}/setWebhook?url=https://{site}/api/telegram&secret_token={secret token}
             //To WebHook Info
             //https://api.telegram.org/bot{token}/getWebhookInfo
+
+            
         }
         public BotClient Api { get; }
 

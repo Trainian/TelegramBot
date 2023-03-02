@@ -59,6 +59,8 @@ namespace Infrastructure.Data.Telegram
                 .WithMany(p => p.Answers)
                 .HasForeignKey(k => k.ProblemId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            base.OnModelCreating(modelBuilder);
         }
     }
 }

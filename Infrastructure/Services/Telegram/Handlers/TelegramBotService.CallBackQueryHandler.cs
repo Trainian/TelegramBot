@@ -2,6 +2,8 @@
 using Telegram.BotAPI;
 using Telegram.BotAPI.AvailableMethods;
 using Telegram.BotAPI.AvailableTypes;
+using Telegram.BotAPI.Payments;
+using Telegram.BotAPI.TelegramPassport;
 using Telegram.BotAPI.InlineMode;
 using Telegram.BotAPI.UpdatingMessages;
 using Microsoft.Extensions.Logging;
@@ -9,6 +11,7 @@ using System.Net;
 using ApplicationCore.Entities.Telegram;
 using Telegram.BotAPI.AvailableMethods.FormattingOptions;
 using ApplicationCore.Enums;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Infrastructure.Services.Telegram
 {
@@ -16,8 +19,9 @@ namespace Infrastructure.Services.Telegram
     {
         protected override async Task OnCallbackQueryAsync(CallbackQuery callbackQuery, CancellationToken cancellationToken)
         {
-            var args = callbackQuery.Data.Split(' ');
-            InlineKeyboardMarkup? markup;
+            var args = callbackQuery!.Data!.Split(' ');
+            TelegramUser? user;
+            InlineKeyboardMarkup? markup = new InlineKeyboardMarkup();
             string result;
 
             switch (args[0])
@@ -105,13 +109,70 @@ namespace Infrastructure.Services.Telegram
 
                 #endregion
 
+                #region Работа с уведомлениями
+
+                case "Notification":
+                    user = await _service.GetUserTelegramByTelegramId(callbackQuery.From!.Id);
+                    var choose = args.Count() > 1 ? args[1] : "DayOfWeek";
+
+                    switch(choose)
+                    {
+                        case "DayOfWeek":
+                            markup = GetInlineLeyboardToChooseNotification(choose, user!.NotificationDays ?? "");
+                            break;
+                        case "HourOnDay":
+                            markup = GetInlineLeyboardToChooseNotification(choose, user!.NotificationHours ?? "");
+                            break;
+                    }
+                    
+                    var message = Api.EditMessageText<Message>(callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId, "Настройка уведомлений", replyMarkup: markup);
+                    Api.EditMessageReplyMarkup<Message>(new EditMessageReplyMarkup()
+                    {
+                        ChatId = callbackQuery.Message.Chat.Id,
+                        MessageId = callbackQuery.Message.MessageId,
+                        ReplyMarkup = markup
+                    });
+                    break;
+
+                case "NotificationChange":
+                    user = await _service.GetUserTelegramByTelegramId(callbackQuery.From!.Id);
+                    switch (args[1])
+                    {
+                        case "DayOfWeek":
+                            var day = Enum.Parse<DayOfWeekRus>(args[2]);
+                            await _service.ChangeUserDayNotification(callbackQuery.From!.Id, day);
+                            markup = GetInlineLeyboardToChooseNotification("DayOfWeek", user!.NotificationDays ?? "");
+                            break;
+                        case "HourOnDay":
+                            var hour = args[2];
+                            await _service.ChangeUserTimeNotification(callbackQuery.From!.Id, hour);
+                            markup = GetInlineLeyboardToChooseNotification("HourOnDay", user!.NotificationHours ?? "");
+                            break;
+                    }
+                    Api.EditMessageReplyMarkup<Message>(new EditMessageReplyMarkup()
+                    {
+                        ChatId = callbackQuery!.Message!.Chat.Id,
+                        MessageId = callbackQuery.Message.MessageId,
+                        ReplyMarkup = markup
+                    });
+                    break;
+
+                #endregion
+
+                #region Простые методы завершения
+
                 case "Nothing":
+                    var answer = "Успешно пропущено";
                     await ClearInlineKeyboard(callbackQuery);
-                    await Api.SendMessageAsync(callbackQuery.Message!.Chat.Id, "Успешно пропущено");
+                    if (args.Count() > 1)
+                        answer = args[1];
+                    await Api.SendMessageAsync(callbackQuery.Message!.Chat.Id, answer);
                     break;
 
                 default:
                     break;
+
+                #endregion
             }
             await base.OnCallbackQueryAsync(callbackQuery, cancellationToken);
         }
