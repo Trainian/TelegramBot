@@ -143,9 +143,9 @@ namespace Infrastructure.Services.Telegram
                         $"Поставил: <b>{problem.UserCreateProblem!.Name}</b> \\ Выполняет: <b>{problem.UserGetProblem?.Name ?? "-"}</b>\n\n";
                     foreach (var answer in problem.Answers)
                     {
-                        message += $"🗨️ <i>{answer.UserCreate!.Name}</i>: \n{answer.Text}\n";
+                        message += $"🗨️ <i>{answer.UserCreate!.Name} ({answer.CreateDateTime.ToString("g")})</i>: \n{answer.Text}\n";
                     }
-                    message += "\n➖➖➖➖➖\n";
+                    message += "\n➖➖➖➖➖\n\n";
                 }
             }
             return message;
