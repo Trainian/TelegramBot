@@ -8,13 +8,13 @@ namespace ApplicationCore.Entities.Telegram
     public class Problem : BaseEntity
     {
         public Problem(){}
-        public Problem(string text, int userId, Prioritys priority, string? img = null)
+        public Problem(string text, int userId, Prioritys priority, DateTime createDT, string? img = null)
         {
             Text = text;
             UserCreateProblemId = userId;
             Priority = priority;
             Img = img;
-            CreateDateTime = DateTime.Now;
+            CreateDateTime = createDT;
         }
 
         [Required]

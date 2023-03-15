@@ -12,13 +12,13 @@ namespace ApplicationCore.Entities.Telegram
     public class Answer : BaseEntity
     {
         public Answer(){}
-        public Answer(int userCreateId, int problemId, string text, string? img = null)
+        public Answer(int userCreateId, int problemId, string text, DateTime createDT, string? img = null)
         {
             UserCreateId = userCreateId;
             ProblemId = problemId;
             Text = text;
             Img = img;
-            CreateDateTime = DateTime.Now;
+            CreateDateTime = createDT;
         }
         [Required]
         public string Text { get; set; } = "Answer";

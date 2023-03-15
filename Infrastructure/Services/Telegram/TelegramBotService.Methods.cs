@@ -10,6 +10,8 @@ using Types = Telegram.BotAPI.AvailableTypes;
 using Microsoft.Extensions.Logging;
 using Infrastructure.Static;
 using System.Threading;
+using Infrastructure.Extensions;
+using System.Net;
 
 namespace Infrastructure.Services.Telegram
 {
@@ -77,14 +79,14 @@ namespace Infrastructure.Services.Telegram
             {
                 case ProblemModifications.Выполнена:
                     problem.IsComplited = true;
-                    await ClearInlineKeyboard(callbackQuery);
+                    await ClearIK(callbackQuery);
                     await SendMessages(Int32.Parse(problemId), ProblemModifications.Выполнена, null);
                     result = await _service.UpdateProblemAsync(problem);
                     await Api.SendMessageAsync(callbackQuery.Message!.Chat.Id, result);
                     break;
 
                 case ProblemModifications.Удалить:
-                    await ClearInlineKeyboard(callbackQuery);
+                    await ClearIK(callbackQuery);
                     await SendMessages(Int32.Parse(problemId), ProblemModifications.Удалить, null);
                     result = await _service.DeleteProblemByIdAsync(problem);
                     await Api.SendMessageAsync(callbackQuery.Message!.Chat.Id, result);
@@ -185,7 +187,7 @@ namespace Infrastructure.Services.Telegram
         public async void CheckNotifications(object o)
         {
             var lastUpdate = Options.LastNotification.ToString("dd.MM.yy hh");
-            var dtNow = DateTime.Now.ToString("dd.MM.yy hh");
+            var dtNow = DateTime.Now.ToMosccow().ToString("dd.MM.yy hh");
 
             if(lastUpdate != dtNow)
             {
@@ -197,7 +199,21 @@ namespace Infrastructure.Services.Telegram
                 }
                 _logger.LogInformation($"({DateTime.Now}) Сработал метод уведомления, с кол-во пользователей: {users.Count()}, прошлый запуск: {Options.LastNotification.ToShortTimeString()}");
             }
-            Options.LastNotification = DateTime.Now;
+            Options.LastNotification = DateTime.Now.ToMosccow();
+        }
+
+        /// <summary>
+        /// Запрос к сервису, что бы не терялось соединение
+        /// </summary>
+        /// <param name="o">null</param>
+        public async void ReconnectApi(object o)
+        {
+            var Url = new UriBuilder((String.Concat(_configuration["ApplicationUrl"], "/api/telegram"))).Uri;
+            var WebHookToken = _configuration["Telegram:WebhookToken"];
+            var client = new HttpClient() { BaseAddress = Url };
+            client.DefaultRequestHeaders.Add("X-Telegram-Bot-Api-Secret-Token", WebHookToken);
+            var response = await client.GetAsync(Url);
+            _logger.LogInformation("Статус запроса к серверу: " + response.StatusCode.ToString());
         }
     }
 }

@@ -23,15 +23,149 @@ namespace Infrastructure.Services.Telegram
         /// </summary>
         /// <param name="callbackQuery">Сообщение для очистки</param>
         /// <returns></returns>
-        protected async Task ClearInlineKeyboard(CallbackQuery callbackQuery)
+        protected async Task ClearIK(CallbackQuery callbackQuery)
         {
             // Очистка действий на сообщение пользователя
             await Api.EditMessageReplyMarkupAsync<Message>(new EditMessageReplyMarkup
             {
-                ChatId = callbackQuery.Message.Chat.Id,
+                ChatId = callbackQuery.Message!.Chat.Id,
                 MessageId = callbackQuery.Message.MessageId,
                 ReplyMarkup = new InlineKeyboardMarkup()
             });
+        }
+
+        /// <summary>
+        /// Меню
+        /// </summary>
+        /// <param name="position">Позиция пользователя</param>
+        /// <returns>Клавиатура для выбора</returns>
+        protected InlineKeyboardMarkup GetIKStart(Positions? position)
+        {
+            InlineKeyboardButton[][] keyboard = new InlineKeyboardButton[2][] 
+            {
+                new InlineKeyboardButton[]{ InlineKeyboardButton.SetCallbackData("Ошибка", $"Nothing") },
+                new InlineKeyboardButton[]{ InlineKeyboardButton.SetCallbackData("Вернуться", $"Nothing") }
+            };
+
+            switch(position)
+            {
+                case Positions.Пользователь:
+                    keyboard = new InlineKeyboardButton[3][];
+                    keyboard[0] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Поставленные мной задачи", $"deliveredproblems")
+                    };
+                    keyboard[1] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Вернуться", $"Nothing")
+                    };
+                    break;
+                case Positions.ТехСпециалист:
+                    keyboard = new InlineKeyboardButton[7][];
+                    keyboard[0] = new InlineKeyboardButton[] 
+                    {
+                        InlineKeyboardButton.SetCallbackData("Поставленные мной задачи", $"Deliveredproblems")
+                    };
+                    keyboard[1] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Поставленные мне задачи", $"Performedproblems")
+                    };
+                    keyboard[2] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Поставленные ботом 1С задачи", $"1cbotproblems")
+                    };
+                    keyboard[3] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Не принятые задачи", $"Notresponsible")
+                    };
+                    keyboard[4] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Редактировать задачу", $"Problemedit")
+                    };
+                    keyboard[5] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Настройки", $"Settings")
+                    };
+                    keyboard[6] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Вернуться", $"Nothing")
+                    };
+                    break;
+                case Positions.Администратор:
+                    keyboard = new InlineKeyboardButton[7][];
+                    keyboard[0] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Поставленные мной задачи", $"Deliveredproblems")
+                    };
+                    keyboard[1] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Поставленные мне задачи", $"Performedproblems")
+                    };
+                    keyboard[2] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Поставленные ботом 1С задачи", $"1cbotproblems")
+                    };
+                    keyboard[3] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Не принятые задачи", $"Notresponsible")
+                    };
+                    keyboard[4] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Редактировать задачу", $"Problemedit")
+                    };
+                    keyboard[5] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Настройки", $"Settings")
+                    };
+                    keyboard[6] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Вернуться", $"Nothing")
+                    };
+                    break;
+                case Positions.СуперАдмин:
+                    keyboard = new InlineKeyboardButton[7][];
+                    keyboard[0] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Поставленные мной задачи", $"Deliveredproblems")
+                    };
+                    keyboard[1] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Поставленные мне задачи", $"Performedproblems")
+                    };
+                    keyboard[2] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Поставленные ботом 1С задачи", $"1cbotproblems")
+                    };
+                    keyboard[3] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Не принятые задачи", $"Notresponsible")
+                    };
+                    keyboard[4] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Редактировать задачу", $"Problemedit")
+                    };
+                    keyboard[5] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Настройки", $"Settings")
+                    };
+                    keyboard[6] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData("Вернуться", $"Nothing")
+                    };
+                    break;
+                default:
+                    keyboard = new InlineKeyboardButton[2][];
+                    keyboard[0] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData($"Зарегестрироваться", $"Register")
+                    };
+                    keyboard[1] = new InlineKeyboardButton[]
+                    {
+                        InlineKeyboardButton.SetCallbackData($"Отменить", $"Nothing")
+                    };
+                    break;
+            }
+            return new InlineKeyboardMarkup(keyboard);
         }
 
         /// <summary>
@@ -39,7 +173,7 @@ namespace Infrastructure.Services.Telegram
         /// </summary>
         /// <param name="problemId">ID проблемы</param>
         /// <returns>Клавиатура для выбора</returns>
-        protected InlineKeyboardMarkup GetInlineKeyboardToModifiedProblem(string problemId)
+        protected InlineKeyboardMarkup GetIKModifiedProblem(string problemId)
         {
             InlineKeyboardButton[][] keyboard = new InlineKeyboardButton[4][];
             keyboard[0] = new InlineKeyboardButton[]
@@ -65,7 +199,7 @@ namespace Infrastructure.Services.Telegram
         /// Получить кнопки для выбора действий с задачей
         /// </summary>
         /// <returns>Клавиатура для выбора</returns>
-        protected InlineKeyboardMarkup GetInlineKeyboardToChooseMetdotsWithProblem ()
+        protected InlineKeyboardMarkup GetIKChooseMetodsWithProblem ()
         {
             return new InlineKeyboardMarkup(new InlineKeyboardButton[][]
                     {
@@ -88,7 +222,7 @@ namespace Infrastructure.Services.Telegram
         /// Получить кнопоки для выбора ответственного пользователя
         /// </summary>
         /// <returns>Клавиатура для выбора</returns>
-        protected async Task<InlineKeyboardMarkup> GetInlineKeyboardToSetResponsibleByTelegramUserAsync()
+        protected async Task<InlineKeyboardMarkup> GetIKSetResponsibleByTelegramUserAsync()
         {
             var users = await _service.GetListUserTelegramByPositionAsync(andHigher: true);
             InlineKeyboardButton[][] buttons = new InlineKeyboardButton[users.Count() + 1][];
@@ -110,7 +244,7 @@ namespace Infrastructure.Services.Telegram
         /// Получить кнопоки для выбора отдела
         /// </summary>
         /// <returns>Клавиатура для выбора</returns>
-        protected InlineKeyboardMarkup GetInlineKeyboardToSetResponsibleByPosition()
+        protected InlineKeyboardMarkup GetIKSetResponsibleByPosition()
         {
             var enums = Enum.GetValues<Positions>();
             InlineKeyboardButton[][] buttons = new InlineKeyboardButton[enums.Count()][];
@@ -132,7 +266,7 @@ namespace Infrastructure.Services.Telegram
         /// Получить кнопки для выбора Пользоватли или Позиции
         /// </summary>
         /// <returns>Клавиатура для выбора</returns>
-        protected InlineKeyboardMarkup GetInlineKeyboardToChooseResponsible()
+        protected InlineKeyboardMarkup GetIKChooseResponsible()
         {
             InlineKeyboardButton[][] buttons = new InlineKeyboardButton[3][];
             buttons[0] = new InlineKeyboardButton[]
@@ -154,7 +288,7 @@ namespace Infrastructure.Services.Telegram
         /// Получить кнопки для выбора Приоритета
         /// </summary>
         /// <returns>Клавиатура для выбора</returns>
-        protected InlineKeyboardMarkup GetInlineKeyboardToChoosePriority(ResponibleTypes responibleType, string whoGet)
+        protected InlineKeyboardMarkup GetIKChoosePriority(ResponibleTypes responibleType, string whoGet)
         {
             InlineKeyboardButton[][] buttons = new InlineKeyboardButton[3][];
             buttons[0] = new InlineKeyboardButton[]
@@ -179,7 +313,7 @@ namespace Infrastructure.Services.Telegram
         /// <param name="callbackData">Какая команда будет выбрана в методе: "OnCommand",
         /// необходима для опеределения от какой команды получено</param>
         /// <returns>Список кнопок с проблемами для выбора</returns>
-        protected async Task<InlineKeyboardMarkup> GetInlineKeyboardWithProblemsAsync(long telegramId, string callbackData)
+        protected async Task<InlineKeyboardMarkup> GetIKWithProblemsAsync(long telegramId, string callbackData)
     {
         var keyboardMarkup = new InlineKeyboardMarkup();
         var problems = (await _service.GetAllProblemsByTelegramIdAsync(telegramId)).ToList();
@@ -213,7 +347,7 @@ namespace Infrastructure.Services.Telegram
         /// <param name="choose">Строка выбора DayOfWeek или HourOnDay</param>
         /// <param name="notifications">Текущие выбранные значения пользователя</param>
         /// <returns>Список кнопок с выбором даты или времени</returns>
-        protected InlineKeyboardMarkup GetInlineLeyboardToChooseNotification(string choose, string notifications)
+        protected InlineKeyboardMarkup GetIKChooseNotification(string choose, string notifications)
         {
             InlineKeyboardButton[][] buttons;
 
@@ -271,7 +405,7 @@ namespace Infrastructure.Services.Telegram
                 buttons[6] = new InlineKeyboardButton[]
                 {
                     InlineKeyboardButton.SetCallbackData("Вернуться","Notification DayOfWeek"),
-                    InlineKeyboardButton.SetCallbackData("Завершить","Nothing Установлено!")
+                    InlineKeyboardButton.SetCallbackData($"Завершить {HeavyCheckMark}","Nothing Установлено!")
                 };
             }
             else
@@ -289,7 +423,7 @@ namespace Infrastructure.Services.Telegram
         /// Выбор настроек
         /// </summary>
         /// <returns>Список кнопок с выбором настроек</returns>
-        protected InlineKeyboardMarkup GetInlineKeyboardSettings()
+        protected InlineKeyboardMarkup GetIKSettings()
         {
             InlineKeyboardButton[][] buttons = new InlineKeyboardButton[2][];
             buttons[0] = new InlineKeyboardButton[]
@@ -299,6 +433,20 @@ namespace Infrastructure.Services.Telegram
             buttons[1] = new InlineKeyboardButton[]
             {
                 InlineKeyboardButton.SetCallbackData($"Вернуться", $"Nothing")
+            };
+            return new InlineKeyboardMarkup(buttons);
+        }
+
+        protected InlineKeyboardMarkup GetIKRegistration()
+        {
+            InlineKeyboardButton[][] buttons = new InlineKeyboardButton[2][];
+            buttons[0] = new InlineKeyboardButton[]
+            {
+                InlineKeyboardButton.SetCallbackData($"Зарегестрироваться", $"Register")
+            };
+            buttons[1] = new InlineKeyboardButton[]
+            {
+                InlineKeyboardButton.SetCallbackData($"Отменить", $"Nothing")
             };
             return new InlineKeyboardMarkup(buttons);
         }

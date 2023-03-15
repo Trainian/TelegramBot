@@ -14,7 +14,7 @@ namespace Web.ViewModels
         public string TelegramName { get; set; }
 
         [Required]
-        public int TelegramId { get; set; }
+        public long TelegramId { get; set; }
 
         [Required]
         public Positions Position { get; set; }

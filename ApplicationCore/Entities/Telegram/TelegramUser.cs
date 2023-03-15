@@ -13,17 +13,18 @@ namespace ApplicationCore.Entities.Telegram
     public class TelegramUser : BaseEntity
     {
         public TelegramUser(){}
-        public TelegramUser(User user)
+        public TelegramUser(User user, Positions position = Positions.Пользователь)
         {
             TelegramId = user.Id;
             Name = user.FirstName;
-            TelegramName = user.Username;
+            TelegramName = user.Username ?? "Not set";
+            Position = position;
         }
         public TelegramUser(long telegramId, string name, string telegramName, Positions position = Positions.Пользователь)
         {
             TelegramId = telegramId;
             Name = name;
-            TelegramName = telegramName;
+            TelegramName = telegramName ?? "Not set";
             Position = position;
         }
         [Required]

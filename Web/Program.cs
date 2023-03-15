@@ -28,7 +28,8 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 builder.Host.UseSerilog((ctx, lx) => {
     lx.ReadFrom.Configuration(builder.Configuration);
     lx.WriteTo.Console();
-    });
+    lx.WriteTo.Seq("https://10d4-194-15-57-144.eu.ngrok.io", apiKey: "89w2DU0sylBVuuPuhvr0");
+});
 
 //builder.Services.AddMemoryCache();
 builder.Services.Configure<CookiePolicyOptions>(options =>

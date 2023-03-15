@@ -48,7 +48,7 @@ namespace Infrastructure.Services.Api
             else if (document != null)
                 imageLink = await DownloadFile(document);
 
-            Problem problem = new Problem(text, user!.Id, priority, imageLink);
+            Problem problem = new Problem(text, user!.Id, priority, DateTime.Now.ToMosccow(), imageLink);
 
             if (responibleType == ResponibleTypes.Пользователь)
                 problem.UserGetProblemId = Int32.Parse(whoGet);
@@ -67,7 +67,7 @@ namespace Infrastructure.Services.Api
             if (imgPath != null)
                 imageLink = await DownloadImage(imgPath);
 
-            var answer = new Answer(userDbCreater!.Id, problemId, text, imageLink);
+            var answer = new Answer(userDbCreater!.Id, problemId, text, DateTime.Now.ToMosccow(), imageLink);
 
             await _answerRepository.AddAsync(answer);
             return "Успешное добавление комментария";
@@ -302,7 +302,7 @@ namespace Infrastructure.Services.Api
                     var NH = user.NotificationHours!.Split(';').Select(s => Int32.Parse(s)).ToList();
                     foreach (var hour in NH)
                     {
-                        if (hour == DateTime.Now.Hour)
+                        if (hour == DateTime.Now.ToMosccow().Hour)
                         {
                             userNotificated.Add(user);
                         }

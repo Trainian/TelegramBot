@@ -1,10 +1,12 @@
 ﻿using ApplicationCore.Entities.Telegram;
 using ApplicationCore.Enums;
+using Infrastructure.Extensions;
 using Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -116,7 +118,7 @@ namespace Infrastructure.Services.Telegram
         {
             var message = $"Задач что {whatTheProblem}, не найдено!";
             IEnumerable<Problem> result = new List<Problem>();
-
+            var culture = CultureInfo.GetCultureInfo("ru-RU");
             switch (whatTheProblem)
             {
                 case WhatTheProblem.Получено:
@@ -143,7 +145,7 @@ namespace Infrastructure.Services.Telegram
                         $"Поставил: <b>{problem.UserCreateProblem!.Name}</b> \\ Выполняет: <b>{problem.UserGetProblem?.Name ?? "-"}</b>\n\n";
                     foreach (var answer in problem.Answers)
                     {
-                        message += $"🗨️ <i>{answer.UserCreate!.Name} ({answer.CreateDateTime.ToString("g")})</i>: \n{answer.Text}\n";
+                        message += $"🗨️ <i>{answer.UserCreate!.Name} ({answer.CreateDateTime.ToString("g",culture)})</i>: \n{answer.Text}\n";
                     }
                     message += "\n➖➖➖➖➖\n\n";
                 }
@@ -152,7 +154,7 @@ namespace Infrastructure.Services.Telegram
         }
 
         /// <summary>
-        /// Сообщение о не Зарегестрированном пользователе
+        /// Сообщение о не Зарегестрированном пользователе с кнопкой регистрации или отмены
         /// </summary>
         /// <param name="message">Сообщение пользователя</param>
         /// <param name="cancellationToken">Токен отмены</param>
@@ -160,7 +162,8 @@ namespace Infrastructure.Services.Telegram
         protected async Task AnswerIsUserNotRegistered(Message message, CancellationToken cancellationToken)
         {
             var answer = "Пользователь не найден в системе, зарегестрируйтесь!";
-            await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
+            var markup = GetIKRegistration();
+            await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, replyMarkup:markup, cancellationToken: cancellationToken);
         }
 
         //TODO: Отправка сообщения, создать общий метод (объединить с другим\и)

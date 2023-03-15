@@ -1,5 +1,6 @@
 ﻿using Infrastructure.Data.Telegram;
 using Infrastructure.Services.Telegram;
+using Web.Interfaces.Timers;
 
 namespace Web.Services.Timers
 {
@@ -29,8 +30,9 @@ namespace Web.Services.Timers
             using (var scope = _service.CreateScope())
             {
                 var _timerService = scope.ServiceProvider.GetRequiredService<IScopedProcessingTimerService>();
-
-                await _timerService.DoWork(stoppingToken);
+                var task1 = _timerService.Notifications(stoppingToken);
+                var task2 = _timerService.Reconnect(stoppingToken);
+                await Task.WhenAll(task1, task2);
             }
         }
 

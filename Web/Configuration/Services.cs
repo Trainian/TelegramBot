@@ -10,6 +10,7 @@ using Web.AutoMapper;
 using Web.Interfaces.Telegram;
 using Web.Services.Telegram;
 using Web.Services.Timers;
+using Web.Interfaces.Timers;
 
 namespace Web.Configuration
 {

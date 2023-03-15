@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 using Telegram.BotAPI.AvailableMethods.FormattingOptions;
 using ApplicationCore.Entities.Telegram;
 using ApplicationCore.Enums;
+using Infrastructure.Extensions;
+using Infrastructure.Static;
 
 namespace Infrastructure.Services.Telegram
 {
@@ -16,8 +18,9 @@ namespace Infrastructure.Services.Telegram
             var args = commandParameters.Split(' ');
             var isRegistered = await UserIsRegistered(message.From!.Id);
             var markup = new InlineKeyboardMarkup();
+            TelegramUser? user;
 
-            string answer;
+            string answer = "";
 #if DEBUG
             _logger.LogInformation("Params: {0}", args.Length);
 #endif
@@ -31,138 +34,21 @@ namespace Infrastructure.Services.Telegram
                     await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
                     break;
 
+                case "start":
+                    user = await _service.GetUserTelegramByTelegramId(message.From.Id);
+                    Positions? position = user?.Position ?? null;
+                    answer = "Меню";
+                    markup = GetIKStart(position);
+                    await Api.SendMessageAsync(message.Chat.Id, answer, replyMarkup: markup);
+                    break;
+
                 case "register":
                     answer = await _service.CreateTelegramUser(message.From!);
                     await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
                     break;
 
-                case "tasks":
-                    if (!isRegistered)
-                    {
-                        await AnswerIsUserNotRegistered(message, cancellationToken);
-                        break;
-                    }
-                    answer = string.Format("📝<b>---Выберете задачу, для прочтения---</b>📝");
-                    markup = await GetInlineKeyboardWithProblemsAsync(message.From.Id, "ShowTasks");
-                    await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, replyMarkup: markup, cancellationToken: cancellationToken);
-                    break;
-
-                case "performedproblems":
-                    if (!isRegistered)
-                    {
-                        await AnswerIsUserNotRegistered(message, cancellationToken);
-                        break;
-                    }
-                    answer = await GetProblemsMessageAsync(message.From!.Id, WhatTheProblem.Получено);
-                    await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
-                    break;
-
-                case "deliveredproblems":
-                    if (!isRegistered)
-                    {
-                        await AnswerIsUserNotRegistered(message, cancellationToken);
-                        break;
-                    }
-                    answer = await GetProblemsMessageAsync(message.From!.Id, WhatTheProblem.Поставлено);
-                    await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
-                    break;
-
-                case "problemedit":
-                    if (!isRegistered)
-                    {
-                        await AnswerIsUserNotRegistered(message, cancellationToken);
-                        break;
-                    }
-                    var inlineKeyboard = await GetInlineKeyboardWithProblemsAsync(message.From!.Id, "GetModifiedProblem");
-                    if (inlineKeyboard.InlineKeyboard == null)
-                        answer = "Нет задач, что можно было бы изменить";
-                    else
-                        answer = "Выберете Задачу, что хотите изменить:";
-                    await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken, replyMarkup: inlineKeyboard);
-                    break;
-
-                case "adminCommands":
-                    #region Команды
-                    answer = string.Format("📝<b>---Возможности команд Администратора---</b>📝\n\n" +
-                        "1️⃣ \'/changeUserPosition\' - Изменяет позицию пользователя (в разработке)\n\n" +
-                        "📝<b>---Возможности команд всех Пользователей---</b>📝\n\n" +
-                        "Предоставьте пользователю команду, для изминения его позиции в команде\n" +
-                        "1️⃣ \'/addTechSpecialist\' - Изменяет позицию пользователя на \'Тех.Специалист\'\n'" +
-                        "2️⃣ \'/addAdministrator\' - Изменяет позицию пользователя на \'Администратор\'\n" +
-                        "3️⃣ \'/addSuperAdmin\' - Изменяет позицию пользователя на \'СуперАдминистратор\'\n");
-                    await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
-                    break;
-                #endregion
-
-                case "addTechSpecialist":
-                    if (!isRegistered)
-                    {
-                        await AnswerIsUserNotRegistered(message, cancellationToken);
-                        break;
-                    }
-                    answer = await ChangeTelegramUserPosition(message.From!.Id, Positions.ТехСпециалист);
-                    await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
-                    break;
-
-                case "addAdministrator":
-                    if (!isRegistered)
-                    {
-                        await AnswerIsUserNotRegistered(message, cancellationToken);
-                        break;
-                    }
-                    answer = await ChangeTelegramUserPosition(message.From!.Id, Positions.Администратор);
-                    await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
-                    break;
-
-                case "addSuperAdmin":
-                    if (!isRegistered)
-                    {
-                        await AnswerIsUserNotRegistered(message, cancellationToken);
-                        break;
-                    }
-                    answer = await ChangeTelegramUserPosition(message.From!.Id, Positions.СуперАдмин);
-                    await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
-                    break;
-
-                case "changeUserPosition":
-                    if (!isRegistered)
-                    {
-                        await AnswerIsUserNotRegistered(message, cancellationToken);
-                        break;
-                    }
-                    answer = string.Format("Находится в разработке");
-                    await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
-                    break;
-
-                case "1cbotproblems":
-                    if (!isRegistered)
-                    {
-                        await AnswerIsUserNotRegistered(message, cancellationToken);
-                        break;
-                    }
-                    answer = await GetProblemsMessageAsync(message.From!.Id, WhatTheProblem.Поставил_Бот);
-                    await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
-                    break;
-
-                case "notresponsible":
-                    if (!isRegistered)
-                    {
-                        await AnswerIsUserNotRegistered(message, cancellationToken);
-                        break;
-                    }
-                    answer = await GetProblemsMessageAsync(message.From!.Id, WhatTheProblem.Не_принятые);
-                    await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, cancellationToken: cancellationToken);
-                    break;
-
-                case "settings":
-                    if (!isRegistered)
-                    {
-                        await AnswerIsUserNotRegistered(message, cancellationToken);
-                        break;
-                    }
-                    markup = GetInlineKeyboardSettings();
-                    answer = string.Format("📝<b>---Выберите настройку---</b>📝");
-                    await Api.SendMessageAsync(message.Chat.Id, answer, parseMode: ParseMode.HTML, replyMarkup: markup, cancellationToken: cancellationToken);
+                case "test":
+                    
                     break;
 
                 default:

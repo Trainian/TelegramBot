@@ -44,7 +44,7 @@ namespace Infrastructure.Services.Telegram
 
                 else
                 {
-                    var messages = GetInlineKeyboardToChooseMetdotsWithProblem();
+                    var messages = GetIKChooseMetodsWithProblem();
                     await Api.SendMessageAsync(message.Chat.Id,
                         text: "Что мне сделать с вашим сообщением?",
                         replyMarkup: messages,
