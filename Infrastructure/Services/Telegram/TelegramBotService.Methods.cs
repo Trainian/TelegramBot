@@ -202,6 +202,9 @@ namespace Infrastructure.Services.Telegram
             Options.LastNotification = DateTime.Now.ToMosccow();
         }
 
+
+
+
         /// <summary>
         /// Запрос к сервису, что бы не терялось соединение
         /// </summary>
@@ -213,7 +216,7 @@ namespace Infrastructure.Services.Telegram
             var client = new HttpClient() { BaseAddress = Url };
             client.DefaultRequestHeaders.Add("X-Telegram-Bot-Api-Secret-Token", WebHookToken);
             var response = await client.GetAsync(Url);
-            _logger.LogInformation("Статус запроса к серверу: " + response.StatusCode.ToString());
+            _logger.LogInformation("Статус запроса к API: " + response.StatusCode.ToString());
         }
     }
 }

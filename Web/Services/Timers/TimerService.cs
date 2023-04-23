@@ -31,7 +31,8 @@ namespace Web.Services.Timers
             {
                 var _timerService = scope.ServiceProvider.GetRequiredService<IScopedProcessingTimerService>();
                 var task1 = _timerService.Notifications(stoppingToken);
-                var task2 = _timerService.Reconnect(stoppingToken);
+                var task2 = _timerService.ReconnectApi(stoppingToken);
+                var task3 = _timerService.ReconnectWeb(stoppingToken);
                 await Task.WhenAll(task1, task2);
             }
         }

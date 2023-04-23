@@ -56,6 +56,10 @@ namespace Infrastructure.Services.Telegram
                         InlineKeyboardButton.SetCallbackData("Поставленные мной задачи", $"deliveredproblems")
                     };
                     keyboard[1] = new InlineKeyboardButton[]
+{
+                        InlineKeyboardButton.SetCallbackData("Редактировать задачу", $"Problemedit")
+};
+                    keyboard[2] = new InlineKeyboardButton[]
                     {
                         InlineKeyboardButton.SetCallbackData("Вернуться", $"Nothing")
                     };
